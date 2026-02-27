@@ -88,7 +88,7 @@ export function getStreak(dreamId: string): number {
 export function getLongestStreak(dreamId: string): number {
   const checkins = getDailyCheckIns(dreamId);
   if (!checkins.length) return 0;
-  const dates = [...new Set(checkins.map((c) => c.date))].sort();
+  const dates = Array.from(new Set(checkins.map((c) => c.date))).sort();
   let best = 1, cur = 1;
   for (let i = 1; i < dates.length; i++) {
     const diff = (new Date(dates[i]).getTime() - new Date(dates[i-1]).getTime()) / 86400000;
