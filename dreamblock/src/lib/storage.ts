@@ -161,7 +161,9 @@ export function getStreakWithGrace(dreamId: string): number {
   if (!checkins.length) return 0;
   const today = new Date().toISOString().slice(0, 10);
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  const dates = new Set([...checkins.map((c) => c.date), ...graceDays]);
+  const dates = new Set(
+  Array.from(new Set(checkins.map((c) => c.date))).concat(graceDays)
+);
   if (!dates.has(today) && !dates.has(yesterday)) return 0;
   let streak = 0;
   const cur = new Date();
@@ -208,7 +210,7 @@ export function getMomentumData(dreamId: string): MomentumPoint[] {
   const checkins = getDailyCheckIns(dreamId);
   const graceDays = getGraceDays(dreamId).map((g) => g.used_for_date);
   if (!checkins.length) return [];
-  const dates = [...new Set(checkins.map((c) => c.date))].sort();
+  const dates = Array.from(new Set(checkins.map(c => c.date))).sort();
   return dates.map((date, i) => {
     const c = checkins.find((x) => x.date === date)!;
     const grace_day_used = graceDays.includes(date);
