@@ -477,8 +477,16 @@ function WeeklySummaryView({ data, dreamId, dream, onDone }: {
   const wins = data.checkins
     .map((c) => c.tiny_win || c.tiny_action)
     .filter((w): w is string => typeof w === "string" && w.length > 0);
-  const hardReasons = data.checkins.map((c) => c.hard_reason).filter((h): h is string => typeof h === "string" && h.length > 0);
-  const pattern = generateWeeklyPattern(data.checkins.length, didDays, hardReasons);
+const hardReasons = data.checkins
+  .map((c) => c.hard_reason)
+  .filter((h) => typeof h === "string" && h.length > 0);
+
+const hardReasonsStr = hardReasons as string[];
+const pattern = generateWeeklyPattern(
+  data.checkins.length,
+  didDays,
+  hardReasonsStr
+);
 
   function handleSave() {
     if (saving) return;
