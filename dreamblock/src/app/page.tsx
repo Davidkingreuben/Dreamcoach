@@ -10,22 +10,22 @@ const COPY_OPTIONS = [
     id: "honest",
     tagline: "Clarity over motivation",
     headline: ["DREAM", "COACH"],
-    body: "This isn't about hype.\nIt's about finally understanding\nwhy you haven't started.",
-    sub: "A structured 15-minute session that names your resistance pattern, stress-tests reality, and gives you honest next steps — not motivation.",
+    body: "This isn't about motivation.\nIt's about understanding why you haven't started the project that matters to you.",
+    sub: "A structured 3-minute diagnostic for a project you've been putting off.\nThrough a short series of questions, it reveals the real forces holding you back and gives you a clear next step.",
   },
   {
     id: "direct",
-    tagline: "Stop waiting. Start knowing.",
+    tagline: "Clarity over motivation",
     headline: ["DREAM", "COACH"],
-    body: "You keep putting it off.\nWe're going to find out exactly why —\nand what to do about it.",
-    sub: "15 minutes. No fluff. Real clarity on your dream, your blocks, and your first real move.",
+    body: "This isn't about motivation.\nIt's about understanding why you haven't started the project that matters to you.",
+    sub: "A structured 3-minute diagnostic for a project you've been putting off.\nThrough a short series of questions, it reveals the real forces holding you back and gives you a clear next step.",
   },
   {
     id: "gentle",
-    tagline: "For the dream you haven't forgotten",
+    tagline: "Clarity over motivation",
     headline: ["DREAM", "COACH"],
-    body: "You haven't abandoned it.\nIt's still there, waiting.\nLet's look at it honestly together.",
-    sub: "A gentle but direct clarity session. We'll map what's really in the way — so you can finally move.",
+    body: "This isn't about motivation.\nIt's about understanding why you haven't started the project that matters to you.",
+    sub: "A structured 3-minute diagnostic for a project you've been putting off.\nThrough a short series of questions, it reveals the real forces holding you back and gives you a clear next step.",
   },
 ];
 
@@ -195,8 +195,30 @@ export default function HomePage() {
             border: "1px solid rgba(255,255,255,0.04)",
           }}
         >
-          <p style={{ fontSize: 13, color: "var(--db-sub)", lineHeight: 1.7, margin: 0 }}>
+          <p style={{ fontSize: 13, color: "var(--db-sub)", lineHeight: 1.7, margin: 0, whiteSpace: "pre-line" as const }}>
             {copy.sub}
+          </p>
+        </div>
+
+        {/* Our Mission */}
+        <div style={{ marginTop: 32 }}>
+          <p
+            style={{
+              fontSize: 10,
+              letterSpacing: "0.15em",
+              color: "var(--db-muted)",
+              textTransform: "uppercase" as const,
+              fontWeight: 500,
+              marginBottom: 12,
+            }}
+          >
+            Our Mission
+          </p>
+          <p style={{ fontSize: 14, color: "var(--db-sub)", lineHeight: 1.7, margin: 0 }}>
+            To us, a <strong>dream</strong> simply means a project or ambition you've delayed starting — writing a book, releasing music, starting a company, or building something meaningful.
+          </p>
+          <p style={{ fontSize: 14, color: "var(--db-sub)", lineHeight: 1.7, margin: "10px 0 0" }}>
+            Dream Coach exists to help people see these ambitions clearly, decide if they still matter, and move forward with intention.
           </p>
         </div>
       </div>
@@ -249,7 +271,7 @@ export default function HomePage() {
           </button>
         )}
         <p style={{ textAlign: "center" as const, fontSize: 11, color: "var(--db-muted)" }}>
-          ~15 min · Saved on your device · No account needed
+          ~3 minutes · Private · No account required
         </p>
       </div>
     </main>
