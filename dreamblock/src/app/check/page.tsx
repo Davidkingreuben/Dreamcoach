@@ -266,6 +266,30 @@ function ChipBtn({
   );
 }
 
+function PillBtn({
+  label, selected, onClick,
+}: { label: string; selected: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "6px 14px",
+        borderRadius: 20,
+        border: selected ? "1px solid rgba(255,255,255,0.45)" : "1px solid rgba(255,255,255,0.1)",
+        background: selected ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.03)",
+        color: selected ? T.text : T.sub,
+        fontSize: 13,
+        cursor: "pointer",
+        lineHeight: 1.4,
+        transition: "all 0.15s ease",
+        whiteSpace: "nowrap" as const,
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
 function NextBtn({
   onClick, disabled = false, label = "Continue →",
 }: { onClick: () => void; disabled?: boolean; label?: string }) {
@@ -292,10 +316,10 @@ function NextBtn({
 }
 
 function SliderRow({
-  label, value, onChange, min = 1, max = 10,
-}: { label: string; value: number; onChange: (v: number) => void; min?: number; max?: number }) {
+  label, value, onChange, min = 1, max = 10, mb = 24,
+}: { label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; mb?: number }) {
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div style={{ marginBottom: mb }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
         <span style={{ fontSize: 14, color: T.sub }}>{label}</span>
         <span style={{ fontSize: 20, fontWeight: 200, color: T.text }}>{value}</span>
@@ -609,30 +633,30 @@ export default function CheckPage() {
 
         {/* ── STEP 0: Combined intake page ── */}
         {step === 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
             {/* Title */}
             <div>
               <SectionLabel>The dream</SectionLabel>
-              <p style={{ fontSize: 20, fontWeight: 300, color: T.text, lineHeight: 1.4, marginBottom: 8 }}>
+              <p style={{ fontSize: 17, fontWeight: 300, color: T.text, lineHeight: 1.4, marginBottom: 4 }}>
                 What have you been putting off?
               </p>
-              <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.5, marginBottom: 14 }}>
+              <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.5, marginBottom: 8 }}>
                 Name it plainly. One sentence is enough.
               </p>
               <textarea
                 value={intake.title}
                 onChange={(e) => setIntake({ ...intake, title: e.target.value })}
                 placeholder="e.g. Recording my first album, starting my business, writing the book..."
-                rows={3}
+                rows={2}
                 style={{
                   width: "100%",
-                  padding: "14px",
-                  borderRadius: 12,
+                  padding: "10px 12px",
+                  borderRadius: 10,
                   border: "1px solid rgba(255,255,255,0.1)",
                   background: "rgba(255,255,255,0.04)",
                   color: T.text,
-                  fontSize: 15,
+                  fontSize: 14,
                   lineHeight: 1.5,
                   resize: "none",
                   outline: "none",
@@ -644,12 +668,12 @@ export default function CheckPage() {
             {/* Category */}
             <div>
               <SectionLabel>Category</SectionLabel>
-              <p style={{ fontSize: 20, fontWeight: 300, color: T.text, lineHeight: 1.4, marginBottom: 14 }}>
+              <p style={{ fontSize: 13, color: T.muted, marginBottom: 8 }}>
                 What category does this fall into?
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6 }}>
                 {CATEGORIES.map((cat) => (
-                  <ChipBtn
+                  <PillBtn
                     key={cat}
                     label={cat}
                     selected={intake.category === cat}
@@ -662,7 +686,7 @@ export default function CheckPage() {
                   value={intake.category_other || ""}
                   onChange={(e) => setIntake({ ...intake, category_other: e.target.value })}
                   placeholder="Describe it..."
-                  style={{ marginTop: 12, width: "100%", padding: "12px 14px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: T.text, fontSize: 14, outline: "none", boxSizing: "border-box" as const }}
+                  style={{ marginTop: 8, width: "100%", padding: "8px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: T.text, fontSize: 13, outline: "none", boxSizing: "border-box" as const }}
                 />
               )}
             </div>
@@ -670,12 +694,12 @@ export default function CheckPage() {
             {/* Years delayed */}
             <div>
               <SectionLabel>How long</SectionLabel>
-              <p style={{ fontSize: 20, fontWeight: 300, color: T.text, lineHeight: 1.4, marginBottom: 14 }}>
+              <p style={{ fontSize: 13, color: T.muted, marginBottom: 8 }}>
                 How long have you wanted this?
               </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6 }}>
                 {YEARS_OPTIONS.map((y) => (
-                  <ChipBtn
+                  <PillBtn
                     key={y}
                     label={y}
                     selected={intake.years_delayed === y}
@@ -685,17 +709,18 @@ export default function CheckPage() {
               </div>
               {intake.years_delayed !== "" && (
                 <div style={{
-                  marginTop: 14,
-                  padding: "12px 16px",
-                  borderRadius: 12,
+                  marginTop: 8,
+                  padding: "7px 12px",
+                  borderRadius: 8,
                   background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.07)",
                 }}>
-                  <p style={{ fontSize: 13, color: T.sub, margin: 0, lineHeight: 1.5 }}>
-                    You&apos;ve carried this for approximately{" "}
+                  <p style={{ fontSize: 12, color: T.sub, margin: 0, lineHeight: 1.5 }}>
+                    Approx.{" "}
                     <span style={{ color: T.text, fontWeight: 500 }}>
                       {yearsToApproxDays(intake.years_delayed).toLocaleString()} days
                     </span>
+                    {" "}carried.
                   </p>
                 </div>
               )}
@@ -704,26 +729,26 @@ export default function CheckPage() {
             {/* Signal sliders */}
             <div>
               <SectionLabel>Signal scores</SectionLabel>
-              <p style={{ fontSize: 20, fontWeight: 300, color: T.text, lineHeight: 1.4, marginBottom: 6 }}>
-                Rate each honestly.
-              </p>
-              <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.5, marginBottom: 20 }}>
-                1 = barely / 10 = completely.
+              <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.5, marginBottom: 12 }}>
+                1 = barely &nbsp;/&nbsp; 10 = completely
               </p>
               <SliderRow
                 label="How much does this matter to you?"
                 value={intake.importance}
                 onChange={(v) => setIntake({ ...intake, importance: v })}
+                mb={14}
               />
               <SliderRow
                 label="How much does not doing it hurt?"
                 value={intake.pain}
                 onChange={(v) => setIntake({ ...intake, pain: v })}
+                mb={14}
               />
               <SliderRow
                 label="How afraid are you of actually doing it?"
                 value={intake.fear}
                 onChange={(v) => setIntake({ ...intake, fear: v })}
+                mb={4}
               />
             </div>
 
