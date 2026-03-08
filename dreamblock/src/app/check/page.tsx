@@ -1027,7 +1027,7 @@ export default function CheckPage() {
         <NextBtn
           onClick={next}
           disabled={!canProceed()}
-          label={isLastStep ? "See your insight →" : step === 0 ? "See what this is costing you →" : "Continue →"}
+          label={isLastStep ? "See your insight →" : step === 0 ? "Let's go deeper →" : "Continue →"}
         />
         {step > 0 && (
           <button
