@@ -47,6 +47,39 @@ input {
   display: none;
 }
 
+/* ── Range slider track brightness ─────────────────────────────────────────── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(180, 195, 235, 0.25);
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(220, 225, 245, 0.9);
+  cursor: pointer;
+  margin-top: -6px;
+}
+input[type="range"]::-moz-range-track {
+  background: rgba(180, 195, 235, 0.25);
+  height: 3px;
+  border-radius: 2px;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(220, 225, 245, 0.9);
+  cursor: pointer;
+  border: none;
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

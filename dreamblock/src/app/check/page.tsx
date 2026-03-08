@@ -237,8 +237,8 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
             height: 2,
             borderRadius: 1,
             background: i < current
-              ? "rgba(200, 210, 240, 0.75)"
-              : "rgba(150, 165, 210, 0.15)",
+              ? "rgba(210, 220, 248, 0.9)"
+              : "rgba(160, 175, 220, 0.28)",
             transition: "background 0.3s ease",
           }}
         />
@@ -653,7 +653,7 @@ export default function CheckPage() {
                 type="text"
                 value={intake.title}
                 onChange={(e) => setIntake({ ...intake, title: e.target.value })}
-                placeholder="e.g. Release an album, Start a ceramics studio..."
+                placeholder="e.g. Write a book, launch a business, start the film, release your music..."
                 style={{
                   width: "100%",
                   padding: "13px 14px",
@@ -768,13 +768,13 @@ export default function CheckPage() {
                 label="How much does this matter to you?"
                 value={intake.importance}
                 onChange={(v) => setIntake({ ...intake, importance: v })}
-                mb={18}
+                mb={28}
               />
               <SliderRow
                 label="How much does not doing it hurt?"
                 value={intake.pain}
                 onChange={(v) => setIntake({ ...intake, pain: v })}
-                mb={18}
+                mb={28}
               />
               <SliderRow
                 label="How afraid are you of actually doing it?"
