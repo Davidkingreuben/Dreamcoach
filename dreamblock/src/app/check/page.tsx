@@ -273,12 +273,12 @@ function PillBtn({
     <button
       onClick={onClick}
       style={{
-        padding: "6px 14px",
-        borderRadius: 20,
-        border: selected ? "1px solid rgba(255,255,255,0.45)" : "1px solid rgba(255,255,255,0.1)",
-        background: selected ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.03)",
+        padding: "8px 18px",
+        borderRadius: 22,
+        border: selected ? "1px solid rgba(255,255,255,0.5)" : "1px solid rgba(255,255,255,0.12)",
+        background: selected ? "rgba(255,255,255,0.13)" : "rgba(255,255,255,0.03)",
         color: selected ? T.text : T.sub,
-        fontSize: 13,
+        fontSize: 14,
         cursor: "pointer",
         lineHeight: 1.4,
         transition: "all 0.15s ease",
@@ -320,9 +320,9 @@ function SliderRow({
 }: { label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; mb?: number }) {
   return (
     <div style={{ marginBottom: mb }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-        <span style={{ fontSize: 14, color: T.sub }}>{label}</span>
-        <span style={{ fontSize: 20, fontWeight: 200, color: T.text }}>{value}</span>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+        <span style={{ fontSize: 15, color: T.text }}>{label}</span>
+        <span style={{ fontSize: 32, fontWeight: 300, color: T.text, lineHeight: 1 }}>{value}</span>
       </div>
       <input
         type="range"
@@ -333,8 +333,8 @@ function SliderRow({
         style={{ width: "100%", accentColor: "rgba(255,255,255,0.7)" }}
       />
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-        <span style={{ fontSize: 11, color: T.muted }}>{min}</span>
-        <span style={{ fontSize: 11, color: T.muted }}>{max}</span>
+        <span style={{ fontSize: 11, color: T.muted }}>{min} — low</span>
+        <span style={{ fontSize: 11, color: T.muted }}>{max} — high</span>
       </div>
     </div>
   );
@@ -633,32 +633,31 @@ export default function CheckPage() {
 
         {/* ── STEP 0: Combined intake page ── */}
         {step === 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-            {/* Title */}
+            {/* Title + input */}
             <div>
-              <SectionLabel>The dream</SectionLabel>
-              <p style={{ fontSize: 17, fontWeight: 300, color: T.text, lineHeight: 1.4, marginBottom: 4 }}>
+              <p style={{ fontSize: 26, fontWeight: 300, color: T.text, lineHeight: 1.3, marginBottom: 6 }}>
                 What have you been putting off?
               </p>
-              <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.5, marginBottom: 8 }}>
-                Name it plainly. One sentence is enough.
+              <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.5, marginBottom: 16 }}>
+                Be specific. Vagueness protects the fantasy.
               </p>
-              <textarea
+              <SectionLabel>Name it</SectionLabel>
+              <input
+                type="text"
                 value={intake.title}
                 onChange={(e) => setIntake({ ...intake, title: e.target.value })}
-                placeholder="e.g. Recording my first album, starting my business, writing the book..."
-                rows={2}
+                placeholder="e.g. Release an album, Start a ceramics studio..."
                 style={{
                   width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: 10,
+                  padding: "13px 14px",
+                  borderRadius: 12,
                   border: "1px solid rgba(255,255,255,0.1)",
                   background: "rgba(255,255,255,0.04)",
                   color: T.text,
                   fontSize: 14,
                   lineHeight: 1.5,
-                  resize: "none",
                   outline: "none",
                   boxSizing: "border-box" as const,
                 }}
@@ -668,10 +667,7 @@ export default function CheckPage() {
             {/* Category */}
             <div>
               <SectionLabel>Category</SectionLabel>
-              <p style={{ fontSize: 13, color: T.muted, marginBottom: 8 }}>
-                What category does this fall into?
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6 }}>
+              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 8 }}>
                 {CATEGORIES.map((cat) => (
                   <PillBtn
                     key={cat}
@@ -683,44 +679,79 @@ export default function CheckPage() {
               </div>
               {intake.category === "Other" && (
                 <input
+                  type="text"
                   value={intake.category_other || ""}
                   onChange={(e) => setIntake({ ...intake, category_other: e.target.value })}
                   placeholder="Describe it..."
-                  style={{ marginTop: 8, width: "100%", padding: "8px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: T.text, fontSize: 13, outline: "none", boxSizing: "border-box" as const }}
+                  style={{ marginTop: 8, width: "100%", padding: "10px 13px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: T.text, fontSize: 14, outline: "none", boxSizing: "border-box" as const }}
                 />
               )}
             </div>
 
             {/* Years delayed */}
             <div>
-              <SectionLabel>How long</SectionLabel>
-              <p style={{ fontSize: 13, color: T.muted, marginBottom: 8 }}>
-                How long have you wanted this?
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6 }}>
-                {YEARS_OPTIONS.map((y) => (
-                  <PillBtn
+              <SectionLabel>How long have you wanted this?</SectionLabel>
+              {/* Row 1: first 4 equal-width */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 6 }}>
+                {YEARS_OPTIONS.slice(0, 4).map((y) => (
+                  <button
                     key={y}
-                    label={y}
-                    selected={intake.years_delayed === y}
                     onClick={() => setIntake({ ...intake, years_delayed: y as typeof intake.years_delayed })}
-                  />
+                    style={{
+                      padding: "9px 4px",
+                      borderRadius: 10,
+                      border: intake.years_delayed === y ? "1px solid rgba(255,255,255,0.5)" : "1px solid rgba(255,255,255,0.12)",
+                      background: intake.years_delayed === y ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.03)",
+                      color: intake.years_delayed === y ? T.text : T.sub,
+                      fontSize: 12,
+                      cursor: "pointer",
+                      lineHeight: 1.4,
+                      transition: "all 0.15s ease",
+                      textAlign: "center" as const,
+                    }}
+                  >
+                    {y}
+                  </button>
                 ))}
               </div>
+              {/* Row 2: 15+ years full-width */}
+              <button
+                onClick={() => setIntake({ ...intake, years_delayed: "15+ years" as typeof intake.years_delayed })}
+                style={{
+                  width: "100%",
+                  padding: "9px 16px",
+                  borderRadius: 10,
+                  border: intake.years_delayed === "15+ years" ? "1px solid rgba(255,255,255,0.5)" : "1px solid rgba(255,255,255,0.12)",
+                  background: intake.years_delayed === "15+ years" ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.03)",
+                  color: intake.years_delayed === "15+ years" ? T.text : T.sub,
+                  fontSize: 12,
+                  cursor: "pointer",
+                  lineHeight: 1.4,
+                  transition: "all 0.15s ease",
+                  textAlign: "center" as const,
+                }}
+              >
+                15+ years
+              </button>
+
+              {/* Day-count card */}
               {intake.years_delayed !== "" && (
                 <div style={{
-                  marginTop: 8,
-                  padding: "7px 12px",
-                  borderRadius: 8,
+                  marginTop: 12,
+                  padding: "16px 20px",
+                  borderRadius: 12,
                   background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.07)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  textAlign: "center" as const,
                 }}>
-                  <p style={{ fontSize: 12, color: T.sub, margin: 0, lineHeight: 1.5 }}>
-                    Approx.{" "}
-                    <span style={{ color: T.text, fontWeight: 500 }}>
-                      {yearsToApproxDays(intake.years_delayed).toLocaleString()} days
-                    </span>
-                    {" "}carried.
+                  <p style={{ fontSize: 12, color: T.muted, marginBottom: 6 }}>
+                    You&apos;ve carried this for approximately
+                  </p>
+                  <p style={{ fontSize: 28, fontWeight: 300, color: T.text, lineHeight: 1.1, marginBottom: 6 }}>
+                    {yearsToApproxDays(intake.years_delayed).toLocaleString()} days
+                  </p>
+                  <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.6, margin: 0 }}>
+                    That&apos;s not laziness. That&apos;s something worth understanding.
                   </p>
                 </div>
               )}
@@ -728,21 +759,17 @@ export default function CheckPage() {
 
             {/* Signal sliders */}
             <div>
-              <SectionLabel>Signal scores</SectionLabel>
-              <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.5, marginBottom: 12 }}>
-                1 = barely &nbsp;/&nbsp; 10 = completely
-              </p>
               <SliderRow
                 label="How much does this matter to you?"
                 value={intake.importance}
                 onChange={(v) => setIntake({ ...intake, importance: v })}
-                mb={14}
+                mb={18}
               />
               <SliderRow
                 label="How much does not doing it hurt?"
                 value={intake.pain}
                 onChange={(v) => setIntake({ ...intake, pain: v })}
-                mb={14}
+                mb={18}
               />
               <SliderRow
                 label="How afraid are you of actually doing it?"
