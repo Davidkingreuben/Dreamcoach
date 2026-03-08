@@ -201,11 +201,28 @@ const REALITY_QUESTIONS: RealityQ[] = [
   },
 ];
 
-// Total step count
-const TOTAL_INTAKE = 6;     // steps 0–5
-const TOTAL_RESISTANCE = 5; // steps 6–10
-const TOTAL_REALITY = REALITY_QUESTIONS.length; // steps 11–18
-const TOTAL_STEPS = TOTAL_INTAKE + TOTAL_RESISTANCE + TOTAL_REALITY; // 19
+// ── Step counts ────────────────────────────────────────────────────────────────
+// Step 0      = combined intake page (title + category + years + sliders)
+// Steps 1–5   = resistance questions
+// Steps 6–13  = reality questions
+
+const TOTAL_INTAKE = 1;
+const TOTAL_RESISTANCE = 5;
+const TOTAL_REALITY = REALITY_QUESTIONS.length; // 8
+const TOTAL_STEPS = TOTAL_INTAKE + TOTAL_RESISTANCE + TOTAL_REALITY; // 14
+
+// ── Day-count helper ───────────────────────────────────────────────────────────
+
+function yearsToApproxDays(years: string): number {
+  switch (years) {
+    case "< 1 year":   return 182;
+    case "1–3 years":  return 730;
+    case "3–7 years":  return 1825;
+    case "7–15 years": return 3650;
+    case "15+ years":  return 5475;
+    default:           return 0;
+  }
+}
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -299,6 +316,14 @@ function SliderRow({
   );
 }
 
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <p style={{ fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase" as const, color: T.muted, fontWeight: 500, marginBottom: 10 }}>
+      {children}
+    </p>
+  );
+}
+
 function QHeader({ label, question, sub }: { label: string; question: string; sub?: string }) {
   return (
     <div style={{ marginBottom: 28 }}>
@@ -354,7 +379,7 @@ export default function CheckPage() {
     without_reward: null,
   });
 
-  // ── Insight state (top-level, not inside conditional) ──
+  // ── Insight state ──
   const [showInsight, setShowInsight] = useState(false);
   const [savedDreamId, setSavedDreamId] = useState<string>("");
   const [insight, setInsight] = useState<InsightSummary | null>(null);
@@ -428,30 +453,39 @@ export default function CheckPage() {
 
   // ── Can we proceed from current step? ──
   function canProceed(): boolean {
-    if (step === 0) return intake.title.trim().length > 0;
-    if (step === 1) return intake.category !== "";
-    if (step === 2) return intake.years_delayed !== "";
-    if (step === 3) return true; // slider always valid
-    if (step === 4) return true;
-    if (step === 5) return true;
-    if (step === 6) return resistance.emotion !== "";
-    if (step === 7) return resistance.first_thought !== "";
-    if (step === 8) return resistance.stuck_point !== "";
-    if (step === 9) return resistance.protecting !== "";
-    if (step === 10) return resistance.guaranteed_hesitate !== "";
+    // Step 0: combined intake page — need title, category, and years_delayed
+    if (step === 0) {
+      return (
+        intake.title.trim().length > 0 &&
+        intake.category !== "" &&
+        intake.years_delayed !== ""
+      );
+    }
 
-    // Reality steps
+    // Resistance steps (1–5)
+    if (step === 1) return resistance.emotion !== "";
+    if (step === 2) return resistance.first_thought !== "";
+    if (step === 3) return resistance.stuck_point !== "";
+    if (step === 4) return resistance.protecting !== "";
+    if (step === 5) return resistance.guaranteed_hesitate !== "";
+
+    // Reality steps (6–13)
     const rIdx = step - TOTAL_INTAKE - TOTAL_RESISTANCE;
     const q = REALITY_QUESTIONS[rIdx];
     if (!q) return true;
     if (q.kind === "single") return reality[q.field] !== "";
-    if (q.kind === "multi") return true; // multi-select always ok
+    if (q.kind === "multi") return true;
     if (q.kind === "bool") return reality[q.field] !== null;
     if (q.kind === "text") return reality[q.field].toString().trim().length > 0;
     return true;
   }
 
   const isLastStep = step === TOTAL_STEPS - 1;
+
+  // ── Phase label ──
+  let phaseLabel = "About the Dream";
+  if (step >= TOTAL_INTAKE && step < TOTAL_INTAKE + TOTAL_RESISTANCE) phaseLabel = "The Resistance";
+  if (step >= TOTAL_INTAKE + TOTAL_RESISTANCE) phaseLabel = "The Reality";
 
   // ── INSIGHT SCREEN ──────────────────────────────────────────────────────────
 
@@ -555,11 +589,6 @@ export default function CheckPage() {
 
   // ── ASSESSMENT SCREEN ────────────────────────────────────────────────────────
 
-  // Determine label for current step
-  let phaseLabel = "About the Dream";
-  if (step >= TOTAL_INTAKE && step < TOTAL_INTAKE + TOTAL_RESISTANCE) phaseLabel = "The Resistance";
-  if (step >= TOTAL_INTAKE + TOTAL_RESISTANCE) phaseLabel = "The Reality";
-
   return (
     <main style={{ background: T.bg, minHeight: "100dvh", display: "flex", flexDirection: "column", maxWidth: 430, margin: "0 auto" }}>
       {/* Progress */}
@@ -578,134 +607,131 @@ export default function CheckPage() {
       {/* Step content */}
       <div className="hide-scrollbar" style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
 
-        {/* ── STEP 0: Title ── */}
+        {/* ── STEP 0: Combined intake page ── */}
         {step === 0 && (
-          <div>
-            <QHeader
-              label="The dream"
-              question="What have you been putting off?"
-              sub="Name it plainly. One sentence is enough."
-            />
-            <textarea
-              value={intake.title}
-              onChange={(e) => setIntake({ ...intake, title: e.target.value })}
-              placeholder="e.g. Recording my first album, starting my business, writing the book..."
-              rows={3}
-              style={{
-                width: "100%",
-                padding: "14px",
-                borderRadius: 12,
-                border: "1px solid rgba(255,255,255,0.1)",
-                background: "rgba(255,255,255,0.04)",
-                color: T.text,
-                fontSize: 15,
-                lineHeight: 1.5,
-                resize: "none",
-                outline: "none",
-                boxSizing: "border-box" as const,
-              }}
-            />
-          </div>
-        )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
 
-        {/* ── STEP 1: Category ── */}
-        {step === 1 && (
-          <div>
-            <QHeader
-              label="The dream"
-              question="What category does this fall into?"
-            />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {CATEGORIES.map((cat) => (
-                <ChipBtn
-                  key={cat}
-                  label={cat}
-                  selected={intake.category === cat}
-                  onClick={() => setIntake({ ...intake, category: cat as typeof intake.category, category_other: "" })}
-                />
-              ))}
-            </div>
-            {intake.category === "Other" && (
-              <input
-                value={intake.category_other || ""}
-                onChange={(e) => setIntake({ ...intake, category_other: e.target.value })}
-                placeholder="Describe it..."
-                style={{ marginTop: 12, width: "100%", padding: "12px 14px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: T.text, fontSize: 14, outline: "none", boxSizing: "border-box" as const }}
+            {/* Title */}
+            <div>
+              <SectionLabel>The dream</SectionLabel>
+              <p style={{ fontSize: 20, fontWeight: 300, color: T.text, lineHeight: 1.4, marginBottom: 8 }}>
+                What have you been putting off?
+              </p>
+              <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.5, marginBottom: 14 }}>
+                Name it plainly. One sentence is enough.
+              </p>
+              <textarea
+                value={intake.title}
+                onChange={(e) => setIntake({ ...intake, title: e.target.value })}
+                placeholder="e.g. Recording my first album, starting my business, writing the book..."
+                rows={3}
+                style={{
+                  width: "100%",
+                  padding: "14px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "rgba(255,255,255,0.04)",
+                  color: T.text,
+                  fontSize: 15,
+                  lineHeight: 1.5,
+                  resize: "none",
+                  outline: "none",
+                  boxSizing: "border-box" as const,
+                }}
               />
-            )}
-          </div>
-        )}
-
-        {/* ── STEP 2: Years delayed ── */}
-        {step === 2 && (
-          <div>
-            <QHeader
-              label="The dream"
-              question="How long have you been putting this off?"
-            />
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {YEARS_OPTIONS.map((y) => (
-                <ChipBtn
-                  key={y}
-                  label={y}
-                  selected={intake.years_delayed === y}
-                  onClick={() => setIntake({ ...intake, years_delayed: y as typeof intake.years_delayed })}
-                />
-              ))}
             </div>
+
+            {/* Category */}
+            <div>
+              <SectionLabel>Category</SectionLabel>
+              <p style={{ fontSize: 20, fontWeight: 300, color: T.text, lineHeight: 1.4, marginBottom: 14 }}>
+                What category does this fall into?
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {CATEGORIES.map((cat) => (
+                  <ChipBtn
+                    key={cat}
+                    label={cat}
+                    selected={intake.category === cat}
+                    onClick={() => setIntake({ ...intake, category: cat as typeof intake.category, category_other: "" })}
+                  />
+                ))}
+              </div>
+              {intake.category === "Other" && (
+                <input
+                  value={intake.category_other || ""}
+                  onChange={(e) => setIntake({ ...intake, category_other: e.target.value })}
+                  placeholder="Describe it..."
+                  style={{ marginTop: 12, width: "100%", padding: "12px 14px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: T.text, fontSize: 14, outline: "none", boxSizing: "border-box" as const }}
+                />
+              )}
+            </div>
+
+            {/* Years delayed */}
+            <div>
+              <SectionLabel>How long</SectionLabel>
+              <p style={{ fontSize: 20, fontWeight: 300, color: T.text, lineHeight: 1.4, marginBottom: 14 }}>
+                How long have you wanted this?
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {YEARS_OPTIONS.map((y) => (
+                  <ChipBtn
+                    key={y}
+                    label={y}
+                    selected={intake.years_delayed === y}
+                    onClick={() => setIntake({ ...intake, years_delayed: y as typeof intake.years_delayed })}
+                  />
+                ))}
+              </div>
+              {intake.years_delayed !== "" && (
+                <div style={{
+                  marginTop: 14,
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}>
+                  <p style={{ fontSize: 13, color: T.sub, margin: 0, lineHeight: 1.5 }}>
+                    You&apos;ve carried this for approximately{" "}
+                    <span style={{ color: T.text, fontWeight: 500 }}>
+                      {yearsToApproxDays(intake.years_delayed).toLocaleString()} days
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Signal sliders */}
+            <div>
+              <SectionLabel>Signal scores</SectionLabel>
+              <p style={{ fontSize: 20, fontWeight: 300, color: T.text, lineHeight: 1.4, marginBottom: 6 }}>
+                Rate each honestly.
+              </p>
+              <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.5, marginBottom: 20 }}>
+                1 = barely / 10 = completely.
+              </p>
+              <SliderRow
+                label="How much does this matter to you?"
+                value={intake.importance}
+                onChange={(v) => setIntake({ ...intake, importance: v })}
+              />
+              <SliderRow
+                label="How much does not doing it hurt?"
+                value={intake.pain}
+                onChange={(v) => setIntake({ ...intake, pain: v })}
+              />
+              <SliderRow
+                label="How afraid are you of actually doing it?"
+                value={intake.fear}
+                onChange={(v) => setIntake({ ...intake, fear: v })}
+              />
+            </div>
+
           </div>
         )}
 
-        {/* ── STEP 3: Importance ── */}
-        {step === 3 && (
-          <div>
-            <QHeader
-              label="Signal scores"
-              question="How important is this to you, really?"
-              sub="1 = mildly curious, 10 = this defines something essential about me."
-            />
-            <SliderRow
-              label="Importance"
-              value={intake.importance}
-              onChange={(v) => setIntake({ ...intake, importance: v })}
-            />
-          </div>
-        )}
-
-        {/* ── STEP 4: Pain ── */}
-        {step === 4 && (
-          <div>
-            <QHeader
-              label="Signal scores"
-              question="How much does NOT doing this cost you?"
-              sub="1 = barely notice, 10 = it weighs on me constantly."
-            />
-            <SliderRow
-              label="Pain of not doing it"
-              value={intake.pain}
-              onChange={(v) => setIntake({ ...intake, pain: v })}
-            />
-          </div>
-        )}
-
-        {/* ── STEP 5: Fear ── */}
-        {step === 5 && (
-          <div>
-            <QHeader
-              label="Signal scores"
-              question="How much does DOING this scare you?"
-              sub="1 = barely nervous, 10 = deeply afraid."
-            />
-            <SliderRow
-              label="Fear of doing it"
-              value={intake.fear}
-              onChange={(v) => setIntake({ ...intake, fear: v })}
-            />
-          </div>
-        )}
-
-        {/* ── STEP 6: Emotion ── */}
-        {step === 6 && (
+        {/* ── STEP 1: Emotion ── */}
+        {step === 1 && (
           <div>
             <QHeader
               label="The resistance"
@@ -732,8 +758,8 @@ export default function CheckPage() {
           </div>
         )}
 
-        {/* ── STEP 7: First thought ── */}
-        {step === 7 && (
+        {/* ── STEP 2: First thought ── */}
+        {step === 2 && (
           <div>
             <QHeader
               label="The resistance"
@@ -760,8 +786,8 @@ export default function CheckPage() {
           </div>
         )}
 
-        {/* ── STEP 8: Stuck point ── */}
-        {step === 8 && (
+        {/* ── STEP 3: Stuck point ── */}
+        {step === 3 && (
           <div>
             <QHeader
               label="The resistance"
@@ -788,8 +814,8 @@ export default function CheckPage() {
           </div>
         )}
 
-        {/* ── STEP 9: Protecting ── */}
-        {step === 9 && (
+        {/* ── STEP 4: Protecting ── */}
+        {step === 4 && (
           <div>
             <QHeader
               label="The resistance"
@@ -817,8 +843,8 @@ export default function CheckPage() {
           </div>
         )}
 
-        {/* ── STEP 10: Guaranteed hesitate ── */}
-        {step === 10 && (
+        {/* ── STEP 5: Guaranteed hesitate ── */}
+        {step === 5 && (
           <div>
             <QHeader
               label="The resistance"
@@ -840,7 +866,7 @@ export default function CheckPage() {
           </div>
         )}
 
-        {/* ── REALITY STEPS (11–18) ── */}
+        {/* ── REALITY STEPS (6–13) ── */}
         {step >= TOTAL_INTAKE + TOTAL_RESISTANCE && (() => {
           const rIdx = step - TOTAL_INTAKE - TOTAL_RESISTANCE;
           const q = REALITY_QUESTIONS[rIdx];
