@@ -675,18 +675,40 @@ export default function CheckPage() {
 
             {/* CTA */}
             <div style={{ paddingTop: 8, paddingBottom: "calc(env(safe-area-inset-bottom,0px) + 8px)", display: "flex", flexDirection: "column", gap: 10 }}>
-              <button
-                onClick={() => router.push(`/coach/${savedDreamId}`)}
-                style={{ width: "100%", padding: "18px", borderRadius: 16, background: T.text, color: "#050510", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer" }}
-              >
-                Begin your coaching journey →
-              </button>
-              <button
-                onClick={() => router.push(`/results/${savedDreamId}`)}
-                style={{ width: "100%", padding: "14px", borderRadius: 16, background: "transparent", color: T.muted, fontSize: 13, border: "none", cursor: "pointer" }}
-              >
-                View full assessment
-              </button>
+              {microCommitAnswer === "no" ? (
+                <>
+                  <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.6, textAlign: "center" as const, margin: "0 0 4px" }}>
+                    This is not failure. It&apos;s a way to find out what still belongs to you.
+                  </p>
+                  <button
+                    onClick={() => router.push(`/release/${savedDreamId}`)}
+                    style={{ width: "100%", padding: "18px", borderRadius: 16, background: T.text, color: "#050510", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer" }}
+                  >
+                    Set this dream down for 30 days →
+                  </button>
+                  <button
+                    onClick={() => router.push(`/results/${savedDreamId}`)}
+                    style={{ width: "100%", padding: "14px", borderRadius: 16, background: "transparent", color: T.muted, fontSize: 13, border: "none", cursor: "pointer" }}
+                  >
+                    View full assessment
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => router.push(`/coach/${savedDreamId}`)}
+                    style={{ width: "100%", padding: "18px", borderRadius: 16, background: T.text, color: "#050510", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer" }}
+                  >
+                    Begin your coaching journey →
+                  </button>
+                  <button
+                    onClick={() => router.push(`/results/${savedDreamId}`)}
+                    style={{ width: "100%", padding: "14px", borderRadius: 16, background: "transparent", color: T.muted, fontSize: 13, border: "none", cursor: "pointer" }}
+                  >
+                    View full assessment
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
