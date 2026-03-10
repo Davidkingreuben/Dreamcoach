@@ -1,8 +1,7 @@
 import type {
   Dream, DailyCheckIn, WeeklySummary, Badge, BadgeType, EventType,
   TeamMember, TeamSignal, DreamTeam, CheckIn,
-  PersonalBest, GraceDay, XPEvent, XPReason, DreamXP, MomentumPoint,
-  VaultEntry, RevisitAnswer,
+  PersonalBest, GraceDay, XPEvent, XPReason, DreamXP, MomentumPoint
 } from "./types";
 
 const KEYS = {
@@ -17,7 +16,6 @@ const KEYS = {
   pb: "dc_pb",
   grace: "dc_grace",
   xp: "dc_xp",
-  vault: "dc_vault",
 };
 
 function load<T>(key: string): T[] {
@@ -422,42 +420,3 @@ export function getCheckins(): CheckIn[] { return load<CheckIn>(KEYS.legacy_chec
 export function saveCheckin(c: CheckIn): void {
   const all = getCheckins(); all.push(c); save(KEYS.legacy_checkins, all);
 }
-
-// ── Released Dreams Vault ──────────────────────────────────────────────────────
-export function getVaultEntries(): VaultEntry[] {
-  return load<VaultEntry>(KEYS.vault);
-}
-export function getDreamVaultEntries(dreamId: string): VaultEntry[] {
-  return getVaultEntries().filter((e) => e.dream_id === dreamId);
-}
-export function saveVaultEntry(entry: VaultEntry): void {
-  const all = getVaultEntries();
-  const idx = all.findIndex((e) => e.id === entry.id);
-  if (idx >= 0) all[idx] = entry; else all.push(entry);
-  save(KEYS.vault, all);
-}
-export function updateVaultEntry(id: string, patch: Partial<VaultEntry>): void {
-  const all = getVaultEntries();
-  const idx = all.findIndex((e) => e.id === id);
-  if (idx >= 0) {
-    all[idx] = { ...all[idx], ...patch };
-    save(KEYS.vault, all);
-  }
-}
-export function getPastDueVaultEntry(dreamId: string): VaultEntry | null {
-  const now = new Date();
-  return (
-    getDreamVaultEntries(dreamId).find(
-      (e) => !e.revisit_answer && !e.archived_permanently && new Date(e.next_review_date) < now
-    ) ?? null
-  );
-}
-export function getRecentReleaseCount(dreamId: string, withinDays = 90): number {
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - withinDays);
-  return getDreamVaultEntries(dreamId).filter(
-    (e) => new Date(e.released_at) > cutoff
-  ).length;
-}
-// Re-export RevisitAnswer so callers can import it from storage if convenient
-export type { RevisitAnswer };
