@@ -86,7 +86,6 @@ const THOUGHT_OPTIONS = [
   { v: "no_start", l: "I don't know where to start" },
   { v: "too_late", l: "It's too late" },
   { v: "wont_matter", l: "It won't matter anyway" },
-  { v: "not_sure", l: "Not sure" },
   { v: "other", l: "Other" },
 ];
 
@@ -97,7 +96,6 @@ const STUCK_OPTIONS = [
   { v: "publishing", l: "Putting it out there" },
   { v: "promoting", l: "Promoting / sharing it" },
   { v: "committing", l: "Committing at all" },
-  { v: "not_sure", l: "Not sure" },
   { v: "other", l: "Other" },
 ];
 
@@ -107,7 +105,6 @@ const PROTECT_OPTIONS = [
   { v: "relationships", l: "My relationships" },
   { v: "control", l: "A feeling of control" },
   { v: "certainty", l: "Certainty / predictability" },
-  { v: "not_sure", l: "Not sure" },
   { v: "other", l: "Other" },
 ];
 
