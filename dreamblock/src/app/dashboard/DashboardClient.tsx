@@ -122,6 +122,11 @@ function DreamCard({ dream, onClick }: { dream: Dream; onClick: () => void }) {
           <div style={{ fontSize: 11, color: "var(--db-muted)" }}>
             {dream.category}{dream.archetype ? ` · ${dream.archetype}` : ""}
           </div>
+          {dream.user_intention && !isReleased && (
+            <div style={{ marginTop: 6, fontSize: 12, color: "var(--db-muted)", fontStyle: "italic", lineHeight: 1.5, opacity: 0.8 }}>
+              &ldquo;{dream.user_intention}&rdquo;
+            </div>
+          )}
         </div>
         <div style={{ textAlign: "right", flexShrink: 0 }}>
           {isReleased

@@ -261,6 +261,12 @@ export default function CoachClient({ dreamId }: { dreamId: string }) {
                 <button onClick={resetForm} style={{ width: "100%", padding: "12px", borderRadius: 12, background: "none", border: "1px solid var(--db-border)", color: "var(--db-muted)", fontSize: 12, cursor: "pointer" }}>Edit check-in</button>
               </div>
             )}
+            {!todayCheckin && step === "did" && dream?.user_intention && (
+              <div style={{ margin: "0 0 14px", padding: "12px 16px", background: "rgba(139,126,216,0.06)", borderRadius: 12, border: "1px solid rgba(139,126,216,0.15)" }}>
+                <div style={{ fontSize: 10, color: "var(--db-muted)", textTransform: "uppercase" as const, letterSpacing: 1, marginBottom: 4 }}>Your first realization</div>
+                <p style={{ fontSize: 13, color: "var(--db-sub)", fontStyle: "italic", lineHeight: 1.6, margin: 0 }}>&ldquo;{dream.user_intention}&rdquo;</p>
+              </div>
+            )}
             {!todayCheckin && step !== "done" && (
               <CheckInForm
                 step={step} setStep={setStep}

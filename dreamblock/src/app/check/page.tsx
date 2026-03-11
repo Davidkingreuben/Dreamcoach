@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { saveDream } from "@/lib/storage";
+import { saveDream, updateDream } from "@/lib/storage";
 import { generateInsight } from "@/lib/logic/insight";
 import { determineArchetype, determineStuckPhase } from "@/lib/logic/archetypes";
 import { classifyDream } from "@/lib/logic/classification";
@@ -413,6 +413,7 @@ export default function CheckPage() {
   const [savedDreamId, setSavedDreamId] = useState<string>("");
   const [insight, setInsight] = useState<InsightSummary | null>(null);
   const [expandedCard, setExpandedCard] = useState<"seen" | "held" | "moved" | null>(null);
+  const [coreRealization, setCoreRealization] = useState("");
 
   // ── Name It microinteraction ──
   const [nameItPhase, setNameItPhase] = useState<null | "thinking" | "confirmed">(null);
@@ -593,6 +594,14 @@ export default function CheckPage() {
   // ── INSIGHT SCREEN ──────────────────────────────────────────────────────────
 
   if (showInsight && insight) {
+    const realizationReady = coreRealization.trim().length > 0;
+
+    function handleUnlock() {
+      if (!realizationReady) return;
+      updateDream(savedDreamId, { user_intention: coreRealization.trim() });
+      router.push(`/results/${savedDreamId}`);
+    }
+
     return (
       <main style={{ background: T.bg, minHeight: "100dvh", display: "flex", flexDirection: "column", maxWidth: 430, margin: "0 auto" }}>
         {/* Header */}
@@ -604,7 +613,7 @@ export default function CheckPage() {
             Here&apos;s what we see.
           </p>
           <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.5 }}>
-            Three honest things, before the first step.
+            Two honest things. Read them slowly.
           </p>
         </div>
 
@@ -646,37 +655,43 @@ export default function CheckPage() {
               </p>
             </div>
 
-            {/* MOVED */}
-            <div style={{ background: `rgba(74,140,110,0.08)`, border: `1px solid ${MOVED_COLOR}30`, borderRadius: 16, padding: "18px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                <span style={{ fontSize: 14, color: MOVED_COLOR }}>◆</span>
-                <p style={{ fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: MOVED_COLOR, fontWeight: 600, margin: 0 }}>
-                  {microCommitAnswer === "no" ? "Released" : "Moved"}
-                </p>
-              </div>
-              <p style={{ fontSize: 13, color: T.muted, marginBottom: 12, lineHeight: 1.5 }}>
-                {microCommitAnswer === "no" ? "A conscious choice." : "One action. Under 10 minutes."}
-              </p>
-              <div style={{ background: "rgba(74,140,110,0.12)", borderRadius: 10, padding: "12px 14px", marginBottom: 10 }}>
-                <p style={{ fontSize: 14, color: T.text, lineHeight: 1.65, margin: 0 }}>{insight.moved}</p>
-              </div>
-              <p style={{ fontSize: 12, color: T.muted, marginBottom: 6 }}>
-                {microCommitAnswer === "no" ? "Begin here:" : "Or, the doorway:"}
-              </p>
-              <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "10px 14px" }}>
-                <p style={{ fontSize: 13, color: T.sub, lineHeight: 1.6, margin: 0, fontStyle: "italic" }}>{insight.moved_doorway}</p>
-              </div>
-            </div>
-
             {/* Philosophy line */}
-            <div style={{ padding: "16px 0", borderTop: "1px solid rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+            <div style={{ padding: "14px 0", borderTop: "1px solid rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
               <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.6, margin: 0, fontStyle: "italic", textAlign: "center" as const }}>
                 &ldquo;{insight.philosophy_line}&rdquo;
               </p>
             </div>
 
+            {/* ── REFLECTION INPUT ── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <p style={{ fontSize: 14, color: T.sub, lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
+                What feels most true here?
+              </p>
+              <textarea
+                value={coreRealization}
+                onChange={(e) => setCoreRealization(e.target.value)}
+                placeholder="Write whatever surfaces — a sentence is enough."
+                rows={3}
+                style={{
+                  width: "100%",
+                  background: "rgba(255,255,255,0.04)",
+                  border: `1px solid ${realizationReady ? "rgba(139,126,216,0.4)" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 12,
+                  padding: "14px 16px",
+                  color: T.text,
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                  resize: "none",
+                  boxSizing: "border-box",
+                  outline: "none",
+                  transition: "border-color 0.2s",
+                  fontFamily: "inherit",
+                }}
+              />
+            </div>
+
             {/* CTA */}
-            <div style={{ paddingTop: 8, paddingBottom: "calc(env(safe-area-inset-bottom,0px) + 8px)", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ paddingTop: 4, paddingBottom: "calc(env(safe-area-inset-bottom,0px) + 8px)", display: "flex", flexDirection: "column", gap: 10 }}>
               {microCommitAnswer === "no" ? (
                 <>
                   <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.6, textAlign: "center" as const, margin: "0 0 4px" }}>
@@ -689,26 +704,39 @@ export default function CheckPage() {
                     Set this dream down for 30 days →
                   </button>
                   <button
-                    onClick={() => router.push(`/results/${savedDreamId}`)}
-                    style={{ width: "100%", padding: "14px", borderRadius: 16, background: "transparent", color: T.muted, fontSize: 13, border: "none", cursor: "pointer" }}
+                    onClick={handleUnlock}
+                    disabled={!realizationReady}
+                    style={{
+                      width: "100%", padding: "14px", borderRadius: 16,
+                      background: "transparent", border: "none", cursor: realizationReady ? "pointer" : "default",
+                      color: realizationReady ? T.sub : T.muted, fontSize: 13,
+                      opacity: realizationReady ? 1 : 0.45, transition: "opacity 0.2s, color 0.2s",
+                    }}
                   >
-                    View full assessment
+                    See the full picture →
                   </button>
                 </>
               ) : (
                 <>
                   <button
-                    onClick={() => router.push(`/coach/${savedDreamId}`)}
-                    style={{ width: "100%", padding: "18px", borderRadius: 16, background: T.text, color: "#050510", fontSize: 16, fontWeight: 600, border: "none", cursor: "pointer" }}
+                    onClick={handleUnlock}
+                    disabled={!realizationReady}
+                    style={{
+                      width: "100%", padding: "18px", borderRadius: 16,
+                      background: realizationReady ? T.text : "rgba(255,255,255,0.08)",
+                      color: realizationReady ? "#050510" : T.muted,
+                      fontSize: 16, fontWeight: 600, border: "none",
+                      cursor: realizationReady ? "pointer" : "default",
+                      transition: "background 0.25s, color 0.25s",
+                    }}
                   >
-                    Begin your coaching journey →
+                    Unlock the deeper pattern →
                   </button>
-                  <button
-                    onClick={() => router.push(`/results/${savedDreamId}`)}
-                    style={{ width: "100%", padding: "14px", borderRadius: 16, background: "transparent", color: T.muted, fontSize: 13, border: "none", cursor: "pointer" }}
-                  >
-                    View full assessment
-                  </button>
+                  {!realizationReady && (
+                    <p style={{ fontSize: 12, color: T.muted, textAlign: "center" as const, margin: 0, opacity: 0.7 }}>
+                      Write something above to continue
+                    </p>
+                  )}
                 </>
               )}
             </div>
