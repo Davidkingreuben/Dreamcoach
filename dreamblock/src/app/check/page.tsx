@@ -84,6 +84,7 @@ const THOUGHT_OPTIONS = [
   { v: "not_enough", l: "I'm not good enough" },
   { v: "judgment", l: "People will judge me" },
   { v: "no_start", l: "I don't know where to start" },
+  { v: "financial", l: "Financial constraints" },
   { v: "too_late", l: "It's too late" },
   { v: "wont_matter", l: "It won't matter anyway" },
   { v: "other", l: "Other" },
@@ -95,7 +96,6 @@ const STUCK_OPTIONS = [
   { v: "finishing", l: "Finishing things" },
   { v: "publishing", l: "Putting it out there" },
   { v: "promoting", l: "Promoting / sharing it" },
-  { v: "committing", l: "Committing at all" },
   { v: "other", l: "Other" },
 ];
 
