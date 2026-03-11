@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getDream } from "@/lib/storage";
-import { ARCHETYPE_INFO } from "@/lib/logic/archetypes";
+import { ARCHETYPE_INFO, getAlternativeArchetypes, getArchetypeReasoning } from "@/lib/logic/archetypes";
 import { CLASSIFICATION_INFO } from "@/lib/logic/classification";
-import type { Dream } from "@/lib/types";
+import type { Dream, ResistanceAnswers, ResistanceArchetype } from "@/lib/types";
 import ShareButton from "@/components/ShareButton";
 
 const T = {
@@ -33,11 +33,31 @@ const stuckLabels: Record<string, string> = { starting: "Starting", consistency:
 const protectLabels: Record<string, string> = { comfort: "My comfort zone", identity: "My sense of who I am", relationships: "My relationships", control: "A feeling of control", certainty: "Certainty / predictability", other: "Other", not_sure: "Not sure" };
 const wantLabels: Record<string, string> = { status: "Status / recognition", identity: "Identity — being someone who does this", process: "The daily process itself", meaning: "Meaning and expression", output: "The finished product", other: "Other" };
 
+/** Build a ResistanceAnswers-compatible object from a Dream for scoring/reasoning */
+function dreamToAnswers(dream: Dream): ResistanceAnswers {
+  return {
+    emotion: dream.emotion as ResistanceAnswers["emotion"],
+    emotion_other: dream.emotion_other,
+    first_thought: dream.first_thought as ResistanceAnswers["first_thought"],
+    first_thought_other: dream.first_thought_other,
+    stuck_point: dream.stuck_point as ResistanceAnswers["stuck_point"],
+    stuck_point_other: dream.stuck_point_other,
+    protecting: dream.protecting as ResistanceAnswers["protecting"],
+    protecting_other: dream.protecting_other,
+    guaranteed_hesitate: dream.guaranteed_hesitate as ResistanceAnswers["guaranteed_hesitate"],
+  };
+}
+
 export default function ResultsClient({ dreamId }: { dreamId: string }) {
   const router = useRouter();
   const [dream, setDream] = useState<Dream | null>(null);
   const [activeTab, setActiveTab] = useState<"assessment" | "steps" | "profile">("assessment");
   const [loading, setLoading] = useState(true);
+
+  // Archetype disagreement flow
+  const [archetypeResponse, setArchetypeResponse] = useState<"none" | "accurate" | "disagree">("none");
+  const [disagreeStep, setDisagreeStep] = useState<1 | 2 | 3>(1);
+  const [viewingArchetype, setViewingArchetype] = useState<string | null>(null); // overrides dream.archetype for display
 
   useEffect(() => {
     const d = getDream(dreamId);
@@ -63,9 +83,12 @@ export default function ResultsClient({ dreamId }: { dreamId: string }) {
     );
   }
 
-  const archInfo = ARCHETYPE_INFO[dream.archetype as keyof typeof ARCHETYPE_INFO];
+  const displayedArchetype = viewingArchetype || dream.archetype;
+  const archInfo = ARCHETYPE_INFO[displayedArchetype as keyof typeof ARCHETYPE_INFO];
   const classInfo = CLASSIFICATION_INFO[dream.classification as keyof typeof CLASSIFICATION_INFO];
   const steps = Array.isArray(dream.micro_steps) ? dream.micro_steps : [];
+  const answers = dreamToAnswers(dream);
+  const alternatives = getAlternativeArchetypes(dream.archetype as ResistanceArchetype, answers, 3);
 
   const tabs = [
     { id: "assessment" as const, label: "Assessment" },
@@ -119,18 +142,139 @@ export default function ResultsClient({ dreamId }: { dreamId: string }) {
               </div>
             )}
 
+            {/* ── Archetype card ── */}
             {archInfo && (
               <div>
                 <Label>Your Resistance Archetype</Label>
+
+                {/* If user picked an alternative, show a banner */}
+                {viewingArchetype && viewingArchetype !== dream.archetype && (
+                  <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "10px 14px", marginBottom: 10, fontSize: 12, color: T.sub }}>
+                    Viewing alternative pattern. Your original diagnosis was <span style={{ color: T.text }}>{dream.archetype}</span>.{" "}
+                    <button onClick={() => { setViewingArchetype(null); setArchetypeResponse("none"); setDisagreeStep(1); }} style={{ background: "none", border: "none", color: T.muted, fontSize: 12, cursor: "pointer", textDecoration: "underline", padding: 0 }}>Reset</button>
+                  </div>
+                )}
+
                 <div style={{ background: archInfo.bg, border: `1px solid ${archInfo.color}30`, borderRadius: 16, padding: "18px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
                     <span style={{ fontSize: 18, color: archInfo.color }}>{archInfo.icon}</span>
-                    <p style={{ fontSize: 16, fontWeight: 500, color: T.text, margin: 0 }}>{dream.archetype}</p>
+                    <p style={{ fontSize: 16, fontWeight: 500, color: T.text, margin: 0 }}>{displayedArchetype}</p>
                   </div>
                   <p style={{ fontSize: 13, color: archInfo.color, fontStyle: "italic", marginBottom: 8 }}>&ldquo;{archInfo.tagline}&rdquo;</p>
                   <p style={{ fontSize: 13, color: T.sub, lineHeight: 1.65, margin: 0 }}>{archInfo.description}</p>
                 </div>
+
+                {/* ── Deeper archetype detail ── */}
+                <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ background: T.surface, borderRadius: 12, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.04)" }}>
+                    <p style={{ fontSize: 10, color: T.muted, textTransform: "uppercase" as const, letterSpacing: "0.1em", marginBottom: 6 }}>Why this happens</p>
+                    <p style={{ fontSize: 13, color: T.sub, lineHeight: 1.65, margin: 0 }}>{archInfo.why}</p>
+                  </div>
+                  <div style={{ background: T.surface, borderRadius: 12, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.04)" }}>
+                    <p style={{ fontSize: 10, color: T.muted, textTransform: "uppercase" as const, letterSpacing: "0.1em", marginBottom: 6 }}>What it protects</p>
+                    <p style={{ fontSize: 13, color: T.sub, lineHeight: 1.65, margin: 0 }}>{archInfo.protects}</p>
+                  </div>
+                  <div style={{ background: T.surface, borderRadius: 12, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.04)" }}>
+                    <p style={{ fontSize: 10, color: T.muted, textTransform: "uppercase" as const, letterSpacing: "0.1em", marginBottom: 6 }}>What people confuse this for</p>
+                    <p style={{ fontSize: 13, color: T.sub, lineHeight: 1.65, margin: 0 }}>{archInfo.confuses}</p>
+                  </div>
+                </div>
+
+                {/* ── Cheats ── */}
+                <div style={{ marginTop: 10, background: T.surface, borderRadius: 12, padding: "14px 16px", border: "1px solid rgba(255,255,255,0.04)" }}>
+                  <p style={{ fontSize: 10, color: T.muted, textTransform: "uppercase" as const, letterSpacing: "0.1em", marginBottom: 10 }}>Pattern Cheats</p>
+                  <p style={{ fontSize: 12, color: T.muted, marginBottom: 10 }}>Tactical workarounds calibrated to this pattern.</p>
+                  {archInfo.cheats.map((cheat, i) => (
+                    <div key={i} style={{ display: "flex", gap: 12, marginBottom: 8, alignItems: "flex-start" }}>
+                      <span style={{ fontSize: 10, color: T.muted, fontFamily: "monospace", paddingTop: 2, minWidth: 16 }}>{i + 1}.</span>
+                      <p style={{ fontSize: 13, color: T.sub, lineHeight: 1.6, margin: 0 }}>{cheat}</p>
+                    </div>
+                  ))}
+                </div>
+
                 <p style={{ fontSize: 12, color: T.muted, marginTop: 8 }}>Stuck phase: <span style={{ color: T.sub }}>{dream.stuck_phase}</span></p>
+
+                {/* ── Disagreement flow ── */}
+                {archetypeResponse === "none" && !viewingArchetype && (
+                  <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
+                    <button
+                      onClick={() => setArchetypeResponse("accurate")}
+                      style={{ flex: 1, padding: "11px 14px", borderRadius: 10, background: "rgba(74,200,130,0.08)", border: "1px solid rgba(74,200,130,0.2)", color: T.sub, fontSize: 13, cursor: "pointer" }}
+                    >
+                      ✓ This feels accurate
+                    </button>
+                    <button
+                      onClick={() => { setArchetypeResponse("disagree"); setDisagreeStep(1); }}
+                      style={{ flex: 1, padding: "11px 14px", borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: T.muted, fontSize: 13, cursor: "pointer" }}
+                    >
+                      ✗ I don&apos;t relate
+                    </button>
+                  </div>
+                )}
+
+                {archetypeResponse === "accurate" && (
+                  <div style={{ marginTop: 10, padding: "12px 14px", background: "rgba(74,200,130,0.06)", borderRadius: 10, border: "1px solid rgba(74,200,130,0.15)" }}>
+                    <p style={{ fontSize: 13, color: "rgba(74,200,130,0.9)", margin: 0 }}>Good. The pattern is named. That&apos;s already a significant part of the work.</p>
+                  </div>
+                )}
+
+                {/* ── Disagree: Step 1 — Reasoning ── */}
+                {archetypeResponse === "disagree" && disagreeStep === 1 && (
+                  <div style={{ marginTop: 12, background: T.surface, borderRadius: 14, padding: "18px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <p style={{ fontSize: 11, color: T.muted, textTransform: "uppercase" as const, letterSpacing: "0.1em", marginBottom: 10 }}>Why the system chose this</p>
+                    <p style={{ fontSize: 13, color: T.sub, lineHeight: 1.7, marginBottom: 14 }}>
+                      {getArchetypeReasoning(dream.archetype as ResistanceArchetype, answers)}
+                    </p>
+                    <button
+                      onClick={() => setDisagreeStep(2)}
+                      style={{ width: "100%", padding: "12px", borderRadius: 10, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: T.text, fontSize: 13, cursor: "pointer" }}
+                    >
+                      I still don&apos;t recognise this →
+                    </button>
+                  </div>
+                )}
+
+                {/* ── Disagree: Step 2 — Acknowledgment ── */}
+                {archetypeResponse === "disagree" && disagreeStep === 2 && (
+                  <div style={{ marginTop: 12, background: T.surface, borderRadius: 14, padding: "18px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <p style={{ fontSize: 11, color: T.muted, textTransform: "uppercase" as const, letterSpacing: "0.1em", marginBottom: 10 }}>Something worth knowing</p>
+                    <p style={{ fontSize: 13, color: T.sub, lineHeight: 1.7, marginBottom: 14 }}>
+                      Many people with this pattern don&apos;t consciously experience it as <span style={{ color: T.text }}>{dream.archetype}</span>. It tends to show up in disguise — as perfectionism, procrastination, waiting for the right moment, or a practical reason that keeps changing shape. Psychological patterns are often most invisible to the people carrying them. This doesn&apos;t mean the diagnosis is right. It means it&apos;s worth considering before dismissing.
+                    </p>
+                    <button
+                      onClick={() => setDisagreeStep(3)}
+                      style={{ width: "100%", padding: "12px", borderRadius: 10, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: T.text, fontSize: 13, cursor: "pointer" }}
+                    >
+                      Show me the alternatives →
+                    </button>
+                  </div>
+                )}
+
+                {/* ── Disagree: Step 3 — Alternatives ── */}
+                {archetypeResponse === "disagree" && disagreeStep === 3 && (
+                  <div style={{ marginTop: 12, background: T.surface, borderRadius: 14, padding: "18px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <p style={{ fontSize: 11, color: T.muted, textTransform: "uppercase" as const, letterSpacing: "0.1em", marginBottom: 6 }}>Maybe your pattern is closer to</p>
+                    <p style={{ fontSize: 12, color: T.muted, marginBottom: 14 }}>Based on your answers, these are the next most probable patterns. Select the one that resonates most.</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {alternatives.map((alt) => {
+                        const altInfo = ARCHETYPE_INFO[alt];
+                        return (
+                          <button
+                            key={alt}
+                            onClick={() => { setViewingArchetype(alt); setArchetypeResponse("none"); setDisagreeStep(1); }}
+                            style={{ textAlign: "left" as const, padding: "14px", borderRadius: 12, background: altInfo?.bg || "rgba(255,255,255,0.03)", border: `1px solid ${altInfo?.color || "rgba(255,255,255,0.08)"}30`, cursor: "pointer" }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                              <span style={{ fontSize: 16, color: altInfo?.color }}>{altInfo?.icon}</span>
+                              <span style={{ fontSize: 14, fontWeight: 500, color: T.text }}>{alt}</span>
+                            </div>
+                            <p style={{ fontSize: 12, color: T.sub, margin: 0, lineHeight: 1.5 }}>{altInfo?.tagline}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -179,7 +323,7 @@ export default function ResultsClient({ dreamId }: { dreamId: string }) {
               <>
                 <div>
                   <Label>Grounded First Steps</Label>
-                  <p style={{ fontSize: 13, color: T.muted }}>Calibrated to your {dream.archetype} pattern. Each under 30 minutes.</p>
+                  <p style={{ fontSize: 13, color: T.muted }}>Calibrated to your {displayedArchetype} pattern. Each under 30 minutes.</p>
                 </div>
                 {steps.map((s, i) => (
                   <div key={i} style={{ background: T.surface, borderRadius: 14, padding: "16px", border: "1px solid rgba(255,255,255,0.04)", display: "flex", gap: 14, alignItems: "flex-start" }}>
@@ -224,7 +368,7 @@ export default function ResultsClient({ dreamId }: { dreamId: string }) {
               {archInfo && (
                 <div style={{ background: T.surface, borderRadius: 14, padding: "16px" }}>
                   <p style={{ fontSize: 13, color: T.sub, lineHeight: 1.7 }}>
-                    Primary block: <span style={{ color: archInfo.color, fontWeight: 500 }}>{dream.archetype}</span>.{" "}
+                    Primary block: <span style={{ color: archInfo.color, fontWeight: 500 }}>{displayedArchetype}</span>.{" "}
                     Stuck phase: <span style={{ color: T.text }}>{dream.stuck_phase}</span>.
                   </p>
                 </div>
@@ -235,7 +379,7 @@ export default function ResultsClient({ dreamId }: { dreamId: string }) {
               <InfoRow label="Primary emotion" value={dream.emotion_other || emotionLabels[dream.emotion] || dream.emotion || "—"} />
               <InfoRow label="First thought" value={dream.first_thought_other || thoughtLabels[dream.first_thought] || dream.first_thought || "—"} />
               <InfoRow label="Where you get stuck" value={dream.stuck_point_other || stuckLabels[dream.stuck_point] || dream.stuck_point || "—"} />
-              <InfoRow label="What you're protecting" value={dream.protecting_other || protectLabels[dream.protecting] || dream.protecting || "—"} />
+              <InfoRow label="What you&apos;re protecting" value={dream.protecting_other || protectLabels[dream.protecting] || dream.protecting || "—"} />
               <InfoRow label="Hesitate even if success guaranteed" value={dream.guaranteed_hesitate === "yes" ? "Yes" : "No"} />
             </div>
             <div>

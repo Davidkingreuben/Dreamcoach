@@ -10,9 +10,11 @@ import {
   getContextualQuote, logEvent,
 } from "@/lib/storage";
 import { generateWeeklyPattern } from "@/lib/logic/insight";
+import { generateDailyDashboard } from "@/lib/logic/dashboard";
+import { ARCHETYPE_INFO } from "@/lib/logic/archetypes";
 import type { Dream, DailyCheckIn, WeeklySummary, Badge, DailyMode, HardReason, MoodLevel } from "@/lib/types";
 
-type Tab = "today" | "history" | "milestones";
+type Tab = "today" | "daily" | "history" | "milestones";
 type CheckStep = "did" | "action" | "hard" | "mode" | "statement" | "done";
 
 const MODE_OPTIONS: { value: DailyMode; label: string; desc: string }[] = [
@@ -190,12 +192,17 @@ export default function CoachClient({ dreamId }: { dreamId: string }) {
 
       {/* Tabs */}
       <div style={{ display: "flex", margin: "16px 20px 0", background: "var(--db-surface)", borderRadius: 10, overflow: "hidden", border: "1px solid var(--db-border)" }}>
-        {(["today", "history", "milestones"] as Tab[]).map((t) => (
-          <button key={t} onClick={() => setTab(t)} style={{
-            flex: 1, padding: "9px 0", background: tab === t ? "rgba(255,255,255,0.08)" : "none",
-            border: "none", color: tab === t ? "var(--db-text)" : "var(--db-muted)",
-            fontSize: 12, cursor: "pointer", fontWeight: tab === t ? 600 : 400, textTransform: "capitalize",
-          }}>{t}</button>
+        {([
+          { id: "today", label: "Today" },
+          { id: "daily", label: "Dashboard" },
+          { id: "history", label: "History" },
+          { id: "milestones", label: "Milestones" },
+        ] as { id: Tab; label: string }[]).map((t) => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{
+            flex: 1, padding: "9px 0", background: tab === t.id ? "rgba(255,255,255,0.08)" : "none",
+            border: "none", color: tab === t.id ? "var(--db-text)" : "var(--db-muted)",
+            fontSize: 11, cursor: "pointer", fontWeight: tab === t.id ? 600 : 400,
+          }}>{t.label}</button>
         ))}
       </div>
 
@@ -274,6 +281,11 @@ export default function CoachClient({ dreamId }: { dreamId: string }) {
               </div>
             )}
           </>
+        )}
+
+        {/* ── DAILY DASHBOARD ── */}
+        {tab === "daily" && (
+          <DailyDashboard dream={dream} checkins={checkins} />
         )}
 
         {/* ── HISTORY ── */}
@@ -464,6 +476,81 @@ function CheckInForm({
   );
 
   return null;
+}
+
+// ── Daily Dashboard Component ─────────────────────────────────────────────────
+
+function DailyDashboard({ dream, checkins }: { dream: Dream; checkins: DailyCheckIn[] }) {
+  const data = generateDailyDashboard(dream, checkins);
+  const archInfo = ARCHETYPE_INFO[dream.archetype as keyof typeof ARCHETYPE_INFO];
+
+  const sections: { label: string; content: string; accent?: string }[] = [
+    {
+      label: "Current Resistance Pattern",
+      content: data.resistance_interpretation,
+      accent: archInfo?.color,
+    },
+    {
+      label: "What You\u2019re Actually After",
+      content: data.what_they_want,
+    },
+    {
+      label: "What Moved Today",
+      content: data.needle_moved,
+      accent: "rgba(74,200,130,1)",
+    },
+    {
+      label: "Biggest Obstacle This Week",
+      content: data.biggest_obstacle,
+      accent: "rgba(230,170,60,0.8)",
+    },
+    {
+      label: "Tomorrow\u2019s Smallest Step",
+      content: data.tomorrow_action,
+      accent: "rgba(91,155,213,0.9)",
+    },
+    {
+      label: "Psychological Cheat",
+      content: data.psychological_cheat,
+      accent: archInfo?.color,
+    },
+    {
+      label: "If You Keep Going",
+      content: data.trajectory,
+    },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {/* Header */}
+      <div style={{ background: archInfo?.bg || "rgba(255,255,255,0.03)", border: `1px solid ${archInfo?.color || "rgba(255,255,255,0.08)"}30`, borderRadius: 14, padding: "16px" }}>
+        <div style={{ fontSize: 10, color: "var(--db-muted)", textTransform: "uppercase" as const, letterSpacing: 1, marginBottom: 6 }}>Daily Summary</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {archInfo && <span style={{ fontSize: 18, color: archInfo.color }}>{archInfo.icon}</span>}
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "var(--db-text)" }}>{data.resistance_pattern}</div>
+            <div style={{ fontSize: 12, color: archInfo?.color || "var(--db-sub)", fontStyle: "italic", marginTop: 2 }}>&ldquo;{archInfo?.tagline}&rdquo;</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Seven sections */}
+      {sections.map((section, i) => (
+        <div key={i} style={{ background: "var(--db-surface)", borderRadius: 12, padding: "14px 16px", border: "1px solid var(--db-border)", borderLeft: section.accent ? `3px solid ${section.accent}` : "1px solid var(--db-border)" }}>
+          <div style={{ fontSize: 10, color: "var(--db-muted)", textTransform: "uppercase" as const, letterSpacing: 1, marginBottom: 6 }}>
+            {section.label}
+          </div>
+          <p style={{ fontSize: 13, color: "var(--db-sub)", lineHeight: 1.65, margin: 0 }}>
+            {section.content}
+          </p>
+        </div>
+      ))}
+
+      <div style={{ fontSize: 10, color: "var(--db-muted)", textAlign: "center" as const, paddingTop: 4 }}>
+        Updated · {new Date(data.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+      </div>
+    </div>
+  );
 }
 
 function WeeklySummaryView({ data, dreamId, dream, onDone }: {
