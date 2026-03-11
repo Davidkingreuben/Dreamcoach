@@ -1,4 +1,4 @@
-# Dream Coach
+TEST MANUAL CHANGE 11 MARCH # Dream Coach
 
 A Next.js 14 PWA for structured psychological self-reflection on delayed dreams. No account, no backend — everything saved locally in the browser.
 
